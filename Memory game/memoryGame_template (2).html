@@ -1,0 +1,251 @@
+<html>
+<head>
+	<title>Memory Game</title>
+</head>
+<body>
+	<div id='titleArea'></div>
+	<hr>
+	<div id='gameArea'></div>
+	<div id='buttonArea'></div>
+	
+	<script>
+	   
+		//constants
+		const SIZE = 52;
+		const PAIR = 2;
+		const SUITS = new Array('Spade', 'Heart', 'Diamond', 'Club');
+		const rows = 4;
+		const cols = 13;
+        
+		
+		//variables
+		var preloadArray = new Array(SIZE);
+		var titleArea = '';
+		var gameArea = '';
+		var buttonArea = '';
+		var i=0;
+		var j=0;
+        var flipCards = '';
+        var showCards = '';
+		var cardSet = new Array(SIZE);
+        var guessCards = new Array();
+        var pairedCards = new Array();
+        var countDown = 60;
+        var assignedIds = new Array(SIZE);
+        var preloadImages = new Array(SIZE);
+        var canClick = true;
+        var interval;
+        var showCardsCounter = 0;
+        var flipCardsCounter = 0;
+        
+        titleArea = document.getElementById('titleArea');
+        
+        //generate unique id's for the cards
+        for(var i = 0; i < SIZE; i++){
+            var card = '';
+            var suite = '';
+            var cardNumber = 0;
+            cardNumber = i%13;
+            if(cardNumber == 0){
+                card = 'Ace';
+            }else if(cardNumber == 10){
+                card = 'Jack';
+            }else if(cardNumber == 11){
+                card = "Queen";
+            }else if(cardNumber == 12){
+                card = "King";
+            }else{
+                card = (i + 1);
+            }
+            if(i < 13){
+                suite = "Spade";
+            }else if(i < 26){
+                suite = "Hearts";
+            }else if(i < 39){
+                suite = "Diamond";
+            }else if(i < 52){
+                suite = "Club";
+            }
+            cardSet[i] = suite+"-"+card;
+        }
+        
+        //Implementation
+        
+		//Preload the images of the cards according to index
+		for(var i=0; i<SIZE; i++){
+				preloadArray[i] = new Image();
+				preloadArray[i].src = '' + i + '.png'; 
+			}
+        for(var i=0; i<SIZE; i++){
+				preloadImages[i] = "<img src='" + i + ".png'"; 
+			}
+	
+		//Functions
+        //Generate initial game environment
+		function setGame(){
+            buttonArea = document.getElementById('buttonArea');
+            titleArea.innerHTML = "<center><b>Memory Game (Time left: "+countDown+" seconds)</b></center>";
+			gameArea = document.getElementById('gameArea');
+		      gameArea.innerHTML += '<table>';
+			for(i=0; i<rows;i++){
+				gameArea.innerHTML +='<tr>';
+				for(j=0;j<cols;j++){
+                    id = assignRandomId();
+					gameArea.innerHTML +="<td>";
+                    gameArea.innerHTML +="<img src = 'back.gif' width='100px' id = '"+id+"' onClick='selectCard(this.id)'></img>";
+                    gameArea.innerHTML +='</td>';
+                }
+                gameArea.innerHTML +='</tr>';
+            }
+            gameArea.innerHTML +='</table>';
+            
+            buttonArea.innerHTML = "<center><button id='stopGame' onClick='stopGame()'>Stop Game</button><button id='flipCards' onClick='flipCard(0)'>Flip Cards</button><button id='showCards' onClick='showCard(0)'>Show Cards</button></center>";
+            
+        }
+        
+        function assignRandomId(){
+            var id = getRandom();
+            while(checkAssigned(id)){
+                id = getRandom();
+            }
+                assignedIds.push(id);
+                return id;
+            
+        }
+        
+        function getRandom(){
+            return id = Math.floor(Math.random() * 52);
+        }
+        
+        function checkAssigned(id){
+           if(assignedIds.includes(id)){
+                return true;
+            }else{
+                return false;
+            } 
+        }
+        
+        function stopGame(){
+            clearInterval(interval);
+            
+            var found = pairedCards.length/2;
+            var result = "You have found "+found+" pairs\n\n";
+            
+            for(var i = 0; i < pairedCards.length; i++){
+                var card1 = pairedCards[i];
+                var card2 = pairedCards[++i];
+                result = result + cardSet[card1] + " -- " +cardSet[card2]+"\n";
+            }
+            alert(result);
+            sortCards();
+            resetTimer();
+            shuffleCards();
+            playGame();
+        }
+        
+        function timer(){
+        
+            countDown = countDown-1;
+            if(countDown < 0){
+                stopGame();
+            }
+            titleArea.innerHTML = "<center><b>Memory Game (Time left: "+countDown+" seconds)</b></center>";
+        }
+        
+        function playGame(){
+            resetTimer();
+            interval = setInterval(timer, 1000); 
+        }
+        function flipCard(cardId){
+            for(var cardId = 0;cardId < SIZE; cardId++){
+                let k = cardId;
+                setTimeout(function(){
+                    var images = document.getElementsByTagName('img');
+                    images[k].src = "back.gif";
+                }, 150 * (k + 1));
+            }
+             
+        }
+        function selectCard(clickedId){
+            if(!canClick){
+                return;
+            }
+              var selected = document.getElementById(clickedId);
+             selected.src = clickedId+".png";
+            if(guessCards.length === 0){
+                guessCards.push(clickedId);
+            }else{
+                canClick = false;
+                guessCards.push(clickedId);
+                setTimeout(isPairedCard, 1500);
+            }
+        }
+        function showCard(cardId){
+            for(var cardId = 0;cardId < SIZE; cardId++){
+                let k = cardId;
+                setTimeout(function(){
+                    var images = document.getElementsByTagName('img');
+                    images[k].src = k+".png";
+                }, 150 * (k + 1));
+            }
+        }
+        function sortCards(){
+            gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = "";
+		    gameArea.innerHTML += '<table>';
+			for(i=0; i<rows;i++){
+				gameArea.innerHTML +='<tr>';
+				for(j=0;j<cols;j++){
+                    id = i + j;
+					gameArea.innerHTML +="<td>";
+                    gameArea.innerHTML +="<img src = 'back.gif' width='100px' id = '"+id+"' onClick='selectCard(this.id)'></img>";
+                    gameArea.innerHTML +='</td>';
+                }
+                gameArea.innerHTML +='</tr>';
+            }
+            gameArea.innerHTML +='</table>';
+        }
+        function resetTimer(){
+            countDown = 60;
+        }
+        function shuffleCards(){
+            gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = "";
+		    gameArea.innerHTML += '<table>';
+			for(i=0; i<rows;i++){
+				gameArea.innerHTML +='<tr>';
+				for(j=0;j<cols;j++){
+                    id = assignRandomId();
+					gameArea.innerHTML +="<td>";
+                    gameArea.innerHTML +="<img src = 'back.gif' width='100px' id = '"+id+"' onClick='selectCard(this.id)'></img>";
+                    gameArea.innerHTML +='</td>';
+                }
+                gameArea.innerHTML +='</tr>';
+            }
+            gameArea.innerHTML +='</table>';
+        }
+        function isPairedCard(){
+            var card1 = guessCards[0];
+            var card2 = guessCards[1];
+            
+            if(card1%13 === card2%13){
+                
+                pairedCards.push(card1);
+                pairedCards.push(card2);
+            }else{
+                card1 = document.getElementById(guessCards[0]);   
+                card2 = document.getElementById(guessCards[1]);
+                for(var i = 0; i < 10000; i++){}
+                card1.src = 'back.gif';
+                card2.src = 'back.gif';
+            }
+            
+            guessCards = new Array();
+            canClick = true;
+        }
+        
+        setGame();
+        interval = setInterval(timer, 1000);
+	</script>
+</body>
+</html>
